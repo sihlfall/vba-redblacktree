@@ -1,7 +1,9 @@
 Attribute VB_Name = "RedBlackTreeTemplate"
+Option Explicit
+
 Type NodeTypeTemplate
     rbParent As Long
-    rbChild(0 To 1) As Long
+    rbChild(0 To 1) As Long ' 0 = left, 1 = right
     rbIsBlack As Boolean
     valueTemplate As Long
 End Type
@@ -16,102 +18,105 @@ Function RedBlackComparatorTemplate(ByRef v1 As Long, ByRef v2 As Long) As Long
     End If
 End Function
 
-' assumption: root <> -1
-Function RedBlackFind(ByRef n As Long, ByRef rightDir As Boolean, ByRef buf() As NodeTypeTemplate, ByVal root As Long, ByVal v As Long) As Boolean
-    Dim cmp As Long, cur As Long, parent As Long, d As Boolean
-    cur = root: parent = -1
-    Do
+' returns
+' * index of node if node was found; in that case out parameters will remain unchanged
+' * -1 otherwise, then the out parameters will indicate where the new node would have to be inserted
+Function RedBlackFindPosition(ByRef outParent As Long, ByRef outAsRightHandChild As Boolean, ByRef buf() As NodeTypeTemplate, ByVal root As Long, ByVal v As Long) As Long
+    Dim cmp As Long, cur As Long, p As Long, rhc As Boolean
+    
+    cur = root: p = -1: rhc = False
+    Do Until cur = -1
         cmp = RedBlackComparatorTemplate(v, buf(cur).valueTemplate)
         If cmp < 0 Then
-            parent = cur: d = False
+            p = cur: rhc = False
             cur = buf(cur).rbChild(0)
         ElseIf cmp = 0 Then
-            n = cur
-            RedBlackFind = True
+            RedBlackFindPosition = cur
             Exit Function
         Else
-            parent = cur: d = True
+            p = cur: rhc = True
             cur = buf(cur).rbChild(1)
         End If
-    Loop Until cur = -1
-    n = parent: rightDir = d: RedBlackFind = False
+    Loop
+    outParent = p: outAsRightHandChild = rhc: RedBlackFindPosition = -1
 End Function
 
-Private Sub RedBlackRotate(ByRef buf() As NodeTypeTemplate, ByRef root As Long, ByVal p As Long, ByVal rightDir As Boolean)
-    Dim g As Long, s As Long, c As Long
-
-    With buf(p)
-        g = .rbParent
-        s = .rbChild(1 + rightDir)
-    End With
-
-    With buf(s)
-        c = .rbChild(-rightDir)
-        .rbChild(-rightDir) = p
-        .rbParent = g
-    End With
-
-    With buf(p)
-        .rbChild(1 + rightDir) = c
-        .rbParent = s
-    End With
-
-    If c <> -1 Then buf(c).rbParent = p
-
-    If g <> -1 Then
-        With buf(g): .rbChild(-(p = .rbChild(1))) = s: End With
-    Else
-        root = s
-    End If
-End Sub
-
-Sub RedBlackInsert(ByRef buf() As NodeTypeTemplate, ByRef root As Long, ByVal n As Long, ByVal p As Long, ByVal rightDir As Boolean)
-    With buf(n)
+' Algorithm adapted from https://en.wikipedia.org/w/index.php?title=Red%E2%80%93black_tree&oldid=1150140777
+Sub RedBlackInsert(ByRef buf() As NodeTypeTemplate, ByRef outRoot As Long, ByVal newNode As Long, ByVal parent As Long, ByVal asRightHandChild As Boolean)
+    Dim g As Long, u As Long, p As Long, n As Long, pIsRhc As Boolean
+    Dim gg As Long, b As Long, c As Long, x As Long, y As Long, z As Long, nIsRhc As Boolean
+    
+    With buf(newNode)
         .rbIsBlack = False
         .rbChild(0) = -1
         .rbChild(1) = -1
-        .rbParent = p
+        .rbParent = parent
     End With
-    If p = -1 Then
-        root = n
+    If parent = -1 Then
+        outRoot = newNode
         Exit Sub
     End If
-    buf(p).rbChild(-rightDir) = n
+    
+    buf(parent).rbChild(-asRightHandChild) = newNode
+    
+    n = newNode: p = parent
     Do
         If buf(p).rbIsBlack Then Exit Sub
-        ' From now on P is red.
+        ' p red
         g = buf(p).rbParent
-        If g = -1 Then ' P red and root
+        If g = -1 Then ' p red and root
             buf(p).rbIsBlack = True
             Exit Sub
         End If
-        ' P is red and not root (G exists)
-        ' rightDir is True if P is the right-hand child of G and False otherwise
-        rightDir = (buf(buf(p).rbParent).rbChild(1) = p)
-        U = buf(g).rbChild(1 + rightDir)
-        If U = -1 Then GoTo CaseI56
-        If buf(U).rbIsBlack Then GoTo CaseI56
+        ' p red and not root (g exists)
+        ' u is supposed to refer to the brother of p
+        pIsRhc = buf(g).rbChild(1) = p
+        u = buf(g).rbChild(1 + pIsRhc)
+        If u = -1 Then GoTo ExitWithRotation
+        If buf(u).rbIsBlack Then GoTo ExitWithRotation
 
-        ' P and U red, G exists
+        ' p and u red, g exists
         buf(p).rbIsBlack = True
-        buf(U).rbIsBlack = True
+        buf(u).rbIsBlack = True
         buf(g).rbIsBlack = False
         n = g
         p = buf(n).rbParent
     Loop Until p = -1
     Exit Sub
 
-CaseI56: ' P red and U black (or does not exist), G exists
-    If n = buf(p).rbChild(1 + rightDir) Then
-        ' CaseI5 (P red and U black and N inner grandchild of G)
-        RedBlackRotate buf, root, p, rightDir ' P is never the root, so param root is meaningless here
-        n = p ' new current node
-        p = buf(g).rbChild(-rightDir)  ' new parent of N
-        ' fall through to CaseI6
+ExitWithRotation: ' p red and u black (or does not exist), g exists
+    ' For an explanation of the following, see
+    '   https://en.wikibooks.org/w/index.php?title=F_Sharp_Programming/Advanced_Data_Structures&oldid=4052491 ,
+    '   Section 3.1 ("Red Black Trees"), second diagram (following the sentence "The center tree is the balanced version.").
+    nIsRhc = buf(p).rbChild(1) = n
+    If pIsRhc = nIsRhc Then ' outer child
+        y = p
+        If pIsRhc Then
+            b = buf(p).rbChild(0): c = buf(n).rbChild(0): x = g: z = n
+        Else
+            b = buf(n).rbChild(1): c = buf(p).rbChild(1): x = n: z = g
+        End If
+    Else ' inner child
+        y = n: With buf(n): b = .rbChild(0): c = .rbChild(1): End With
+        If pIsRhc Then
+            x = g: z = p
+        Else
+            x = p: z = g
+        End If
     End If
-
-    ' CaseI6 (P red and U black and N outer grandchild of G)
-    RedBlackRotate buf, root, g, 1 + rightDir ' G may be the root
-    buf(p).rbIsBlack = True
-    buf(g).rbIsBlack = False
+    
+    gg = buf(g).rbParent
+    
+    With buf(x): .rbIsBlack = False: .rbParent = y: .rbChild(1) = b: End With
+    With buf(y): .rbIsBlack = True: .rbParent = gg: .rbChild(0) = x: .rbChild(1) = z: End With
+    With buf(z): .rbIsBlack = False: .rbParent = y: .rbChild(0) = c: End With
+    
+    If b <> -1 Then buf(b).rbParent = x
+    If c <> -1 Then buf(c).rbParent = z
+    
+    If gg = -1 Then
+        outRoot = y
+    Else
+        With buf(gg): .rbChild(-(.rbChild(1) = g)) = y: End With
+    End If
 End Sub

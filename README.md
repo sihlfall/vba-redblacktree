@@ -1,9 +1,9 @@
 # A red–black tree implementation for VBA / VB6
 
-This is a translation of the red–black tree example implementation that can be found on [Wikipedia](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree) to VBA. We support insertion only.
+This is a VBA implementation of a red–black tree. We support insertion only.
 
-The nodes are kept in an array. `RedBlackInsert` inserts a prepared node into the tree at a given location. `RedBlackFind` searches for a node in the tree or—if the node does not exist—for the appropriate location where the corresponding node would have to be inserted.
+The nodes are kept in an array. `RedBlackInsert` inserts a prepared node into the tree at a given location. `RedBlackFindPosition` searches for a node in the tree; if the node does not exist in the tree, it provides the location at which the node would have to be inserted.
 
-The implementation is meant to serve as a template, which can be customized by adjusting the `NodeTypeTemplate` type and replacing the call to `RedBlackComparatorTemplate` in `RedBlackFind` by an appropriate comparison.
+The implementation is meant to serve as a template, which can be customized by adjusting the `NodeTypeTemplate` type and replacing the call to `RedBlackComparatorTemplate` in `RedBlackFindPosition` by an appropriate comparison. For an example on how to use the code, have a look at the subroutine `RunTest` in [`test/RedBlackTreeTest.bas`](test/RedBlackTreeTest.bas).
 
-For an example how to use the code, have a look at subroutine `RunTest` in [`test/RedBlackTreeTest.bas`](test/RedBlackTreeTest.bas).
+An explanation of the algorithm can be found on [Wikipedia](https://en.wikipedia.org/w/index.php?title=Red%E2%80%93black_tree&oldid=1150140777) and [Wikibooks](https://en.wikibooks.org/w/index.php?title=F_Sharp_Programming/Advanced_Data_Structures&oldid=4052491). The variable names we use are similar to the ones used in the code examples there.
