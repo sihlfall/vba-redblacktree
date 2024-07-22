@@ -1,14 +1,14 @@
 Attribute VB_Name = "RedBlackTreeTemplate"
 Option Explicit
 
-Type NodeTypeTemplate
+Public Type NodeTypeTemplate
     rbParent As Long
     rbChild(0 To 1) As Long ' 0 = left, 1 = right
     rbIsBlack As Boolean
     valueTemplate As Long
 End Type
 
-Function RedBlackComparatorTemplate(ByRef v1 As Long, ByRef v2 As Long) As Long
+Public Function RedBlackComparatorTemplate(ByRef v1 As Long, ByRef v2 As Long) As Long
     If v1 < v2 Then
         RedBlackComparatorTemplate = -1
     ElseIf v1 = v2 Then
@@ -21,7 +21,7 @@ End Function
 ' returns
 ' * index of node if node was found; in that case out parameters will remain unchanged
 ' * -1 otherwise, then the out parameters will indicate where the new node would have to be inserted
-Function RedBlackFindPosition(ByRef outParent As Long, ByRef outAsRightHandChild As Boolean, ByRef buf() As NodeTypeTemplate, ByVal root As Long, ByVal v As Long) As Long
+Public Function RedBlackFindPosition(ByRef outParent As Long, ByRef outAsRightHandChild As Boolean, ByRef buf() As NodeTypeTemplate, ByVal root As Long, ByVal v As Long) As Long
     Dim cmp As Long, cur As Long, p As Long, rhc As Boolean
     
     cur = root: p = -1: rhc = False
@@ -42,7 +42,7 @@ Function RedBlackFindPosition(ByRef outParent As Long, ByRef outAsRightHandChild
 End Function
 
 ' Algorithm adapted from https://en.wikipedia.org/w/index.php?title=Red%E2%80%93black_tree&oldid=1150140777
-Sub RedBlackInsert(ByRef buf() As NodeTypeTemplate, ByRef outRoot As Long, ByVal newNode As Long, ByVal parent As Long, ByVal asRightHandChild As Boolean)
+Public Sub RedBlackInsert(ByRef buf() As NodeTypeTemplate, ByRef outRoot As Long, ByVal newNode As Long, ByVal parent As Long, ByVal asRightHandChild As Boolean)
     Dim g As Long, u As Long, p As Long, n As Long, pIsRhc As Boolean
     Dim gg As Long, b As Long, c As Long, x As Long, y As Long, z As Long, nIsRhc As Boolean
     
